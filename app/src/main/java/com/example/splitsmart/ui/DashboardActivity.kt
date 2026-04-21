@@ -22,23 +22,25 @@ class DashboardActivity : AppCompatActivity() {
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         listView.adapter = adapter
 
-
         ExpenseViewModel.expenseList.observe(this) { list ->
             adapter.clear()
             adapter.addAll(list.map { "${it.title} - $${it.amount}" })
         }
 
+        listView.setOnItemClickListener { _, _, position, _ ->
+            val expense = ExpenseViewModel.expenseList.value?.getOrNull(position)
+
+            if (expense != null) {
+                val intent = Intent(this, DetailActivity::class.java)
+                intent.putExtra("expense", expense)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Error loading expense", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         addBtn.setOnClickListener {
             startActivity(Intent(this, AddExpenseActivity::class.java))
         }
-    }
-
-
-    override fun onResume() {
-        super.onResume()
-
-        val list = ExpenseViewModel.expenseList.value ?: listOf()
-        adapter.clear()
-        adapter.addAll(list.map { "${it.title} - $${it.amount}" })
     }
 }

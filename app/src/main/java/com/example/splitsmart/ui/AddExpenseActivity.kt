@@ -1,6 +1,7 @@
 package com.example.splitsmart.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -26,31 +27,51 @@ class AddExpenseActivity : AppCompatActivity() {
 
         saveBtn.setOnClickListener {
 
+            Log.d("SplitSmart", "Save button clicked")
+
             val title = titleInput.text.toString().trim()
-            val amountText = amountInput.text.toString().trim()
+            val amount = amountInput.text.toString().toDoubleOrNull()
             val paidBy = paidByInput.text.toString().trim()
             val membersText = membersInput.text.toString().trim()
 
-            val amount = amountText.toDoubleOrNull()
-            val members = membersText.split(",").map { it.trim() }
 
+            if (title.isEmpty()) {
+                Log.e("SplitSmart", "Validation failed: Title is empty")
+                titleInput.error = "Required"
+                return@setOnClickListener
+            }
 
-            if (title.isEmpty() || amount == null || paidBy.isEmpty() || membersText.isEmpty()) {
-                Toast.makeText(this, "Please fill all fields correctly", Toast.LENGTH_SHORT).show()
+            if (amount == null || amount <= 0) {
+                Log.e("SplitSmart", "Validation failed: Invalid amount")
+                amountInput.error = "Enter valid amount"
+                return@setOnClickListener
+            }
+
+            if (paidBy.isEmpty()) {
+                Log.e("SplitSmart", "Validation failed: PaidBy is empty")
+                paidByInput.error = "Required"
+                return@setOnClickListener
+            }
+
+            if (membersText.isEmpty()) {
+                Log.e("SplitSmart", "Validation failed: Members empty")
+                membersInput.error = "Required"
                 return@setOnClickListener
             }
 
 
-            val expense = Expense(
-                title = title,
-                amount = amount,
-                paidBy = paidBy,
-                members = members
-            )
+            val members = membersText
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+
+            val expense = Expense(title, amount, paidBy, members)
 
             viewModel.addExpense(expense)
 
-            Toast.makeText(this, "Expense Added & Split!", Toast.LENGTH_SHORT).show()
+            Log.d("SplitSmart", "Expense successfully added: $title")
+
+            Toast.makeText(this, "Expense Added!", Toast.LENGTH_SHORT).show()
 
             finish()
         }
